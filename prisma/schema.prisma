@@ -1,0 +1,225 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id Int @id @default(autoincrement())
+  name String?
+  mname String?
+  lname String?
+  gender  String?
+  Birthdate DateTime?  @db.Date
+  PhoneNum  String?
+  Address  String?
+  email String? @unique
+  emailVerified DateTime?
+  image String?
+  hashedPassword String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  accounts Account[]
+  booking Booking[]
+  feedback Feedback[]
+  notification Notification[]
+  voucher Voucher[]
+  rating Rating[]
+  
+
+}
+
+model Account {
+  id Int @id @default(autoincrement())
+  userId Int
+  type String
+  provider String
+  providerAccountId String
+  refresh_token String? @db.Text
+  access_token String? @db.Text
+  expires_at Int?
+  token_type String?
+  scope String?
+  id_token String? @db.Text
+  session_state String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Spa {
+  id Int @id @default(autoincrement())
+  name String?
+  address String?
+  username String? @unique
+  hashedPassword String?
+  email String? @unique
+  phoneNum String?
+  gcashname String?
+  desc String?
+  image String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  status Int @default(3)
+  spaStatus SpaStatus @relation(fields: [status], references: [id])
+  userType String?
+
+  bookings Booking[]
+  therapists Therapist[]
+  feedback Feedback[]
+  notification Notification[]
+  voucher Voucher[]
+  contract Contract[]
+  payment Payment[]
+  rating Rating[]
+}
+
+model SpaStatus {
+  id Int @id 
+  status String?
+  spas Spa[]
+}
+
+model Massage {
+  id Int @id @default(autoincrement())
+  type String?
+  duration Int
+  price Decimal @db.Decimal(10, 2)
+  bookings Booking[]
+}
+
+model Booking {
+  id Int @id @default(autoincrement())
+  massageId Int
+  massage Massage @relation(fields: [massageId], references: [id])
+  spaId Int
+  spa Spa @relation(fields: [spaId], references: [id])
+  userId Int
+  user User @relation(fields: [userId], references: [id])
+  address String?
+  status Int @default(0)
+  bookingStatus BookingStatus @relation(fields: [status], references: [id])
+  therapistId Int?
+  therapist Therapist? @relation(fields: [therapistId], references: [id])
+  ETA String?
+  discount Decimal? @db.Decimal(10, 2)
+  serviceTypeId Int?
+  serviceType ServiceType? @relation(fields: [serviceTypeId], references: [id])
+  createdAt DateTime @default(now())
+
+  payment Payment[]
+  
+}
+model BookingStatus {
+  id Int @id 
+  status String?
+  bookings Booking[]
+}
+
+model ServiceType{
+  id Int@id
+  type String?
+  bookings Booking[]
+}
+
+model Therapist {
+  id Int @id @default(autoincrement())
+  spaId Int
+  spa Spa @relation(fields: [spaId], references: [id])
+  fname String?
+  mname String?
+  lname String?
+  gender String?
+  Birthdate DateTime?
+  address String?
+  status Int @default(3)
+  pwdCardImage String?
+  phoneNum String?
+  therapistStatus therapistStatus @relation(fields: [status], references: [id])
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  
+  bookings Booking[]
+}
+
+model therapistStatus {
+  id Int @id
+  status String?
+  therapist Therapist[]
+}
+
+model Feedback {
+  id Int @id @default(autoincrement())
+  userId Int?
+  user User? @relation(fields: [userId], references: [id])
+  spaId Int
+  spa Spa @relation(fields: [spaId], references: [id])
+  feedback String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime? @db.Timestamp
+}
+
+model Notification {
+  id Int @id @default(autoincrement())
+  userId Int?
+  user User? @relation(fields: [userId], references: [id])
+  spaId Int?
+  spa Spa? @relation(fields: [spaId], references: [id])
+  notification_message String?
+  status String @default("new")
+  createdAt DateTime @default(now())
+}
+model Payment{
+  id Int @id @default(autoincrement())
+  bookingId Int
+  booking Booking @relation(fields: [bookingId],references: [id])
+  spaId Int?
+  spa Spa? @relation(fields: [spaId], references: [id])
+  expectedAmount Decimal @db.Decimal(10, 2)
+  paymentProofImg String
+}
+
+
+model Voucher {
+  id Int      @id @default(autoincrement())
+  code String   @unique
+  spaId Int
+  spa Spa @relation(fields: [spaId], references: [id])
+  userId Int?
+  user User? @relation(fields: [userId], references: [id])
+  value Float?
+  usageLimit Int?     @default(1) // Default usage limit is 1
+  remainingUses Int?     @default(1) // Initial remaining uses is equal to usage limit
+  createdAt DateTime @default(now())
+}
+
+model Contract {
+  id Int      @id @default(autoincrement())
+  spaId Int
+  spa Spa @relation(fields: [spaId], references: [id])
+  ownerName String
+  price Decimal? @db.Decimal(10, 2)
+  subscription String
+  paymentProofImg String
+  approvedDate  DateTime? // Date when the contract was approved
+  expirationDate DateTime? // Date when the contract expires
+  createdAt DateTime @default(now())
+}
+
+model Rating {
+  id Int      @id @default(autoincrement())
+  userId Int
+  user User @relation(fields: [userId], references: [id])
+  spaId Int
+  spa Spa @relation(fields: [spaId], references: [id])
+  ratings Float
+
+}
